@@ -1,0 +1,29 @@
+{
+  "name": "homebridge-salus-it600-gateway",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "salus-it600-pack": "^1.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/adrmnt/homebridge-salus-it600-gateway.git"
+  },
+  "bugs": {
+    "url": "https://github.com/edlea/homebridge-salus-it600-gateway/issues"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "salus-it600-pack"
+  ],
+  "engines": {
+    "homebridge": ">=0.2.5",
+    "node": ">=10.0.0"
+  }
+}
