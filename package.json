@@ -1,15 +1,15 @@
 {
   "name": "homebridge-salus-it600-gateway",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.1.0",
+  "description": "Homebridge plugin for Salus iT600 thermostats.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Adrian Manta",
   "license": "ISC",
   "dependencies": {
-    "salus-it600-pack": "^1.0.2"
+    "salus-it600-pack": "^1.1.0"
   },
   "repository": {
     "type": "git",
@@ -25,5 +25,7 @@
   "engines": {
     "homebridge": ">=0.2.5",
     "node": ">=10.0.0"
-  }
+  },
+  "homepage": "https://github.com/adrmnt/homebridge-salus-it600-gateway#readme",
+  "devDependencies": {}
 }

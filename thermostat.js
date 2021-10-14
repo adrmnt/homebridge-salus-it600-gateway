@@ -3,16 +3,13 @@
 let Service, Characteristic;
 
 class SalusThermostatAccessory {
-    constructor(log, accessory, salus, device) {
+    constructor(log, accessory, salus, device, token) {
         this.log = log;
         this.accessory = accessory;
         this.device = device;
         this.salus = salus;
+        this.token = token;
 
-        // extract name from device
-        this.name = device.name;
-
-        // setup information service
         this.information = this.accessory.getService(Service.AccessoryInformation);
         this.information
             .setCharacteristic(Characteristic.Manufacturer, "Salus")
@@ -36,12 +33,10 @@ class SalusThermostatAccessory {
             .setProps({
                 validValues: [
                     Characteristic.TargetHeatingCoolingState.OFF,
-                    Characteristic.TargetHeatingCoolingState.HEAT,
-                    Characteristic.TargetHeatingCoolingState.AUTO,
+                    Characteristic.TargetHeatingCoolingState.HEAT
                 ],
             });
 
-        // create handlers for required characteristics
         this.service
             .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
             .on("get", this.getCurrentHeatingCoolingState.bind(this));
@@ -49,7 +44,6 @@ class SalusThermostatAccessory {
         this.service
             .getCharacteristic(Characteristic.TargetHeatingCoolingState)
             .on("get", this.getTargetHeatingCoolingState.bind(this))
-            .on("set", this.setTargetHeatingCoolingState.bind(this));
 
         this.service
             .getCharacteristic(Characteristic.CurrentTemperature)
@@ -71,111 +65,68 @@ class SalusThermostatAccessory {
             .on("get", this.getActiveStatus.bind(this));
     }
 
-    getCurrentHeatingCoolingState(callback) {
-        this.salus.devices().then((devices) => {
-            const device = devices.find((device) => device.id == this.device.id);
-            callback(
-                null,
-                device.heating
-                    ? Characteristic.CurrentHeatingCoolingState.HEAT
-                    : Characteristic.CurrentHeatingCoolingState.OFF
-            );
-        });
-    }
+    async getCurrentHeatingCoolingState(callback) {
+        await this.isTokenValid();
+        this.device.heating = await this.salus.getDeviceHeating(this.token.value, this.device.id);
 
-    getTargetHeatingCoolingState(callback) {
-        this.salus.devices().then((devices) => {
-            const device = devices.find((device) => device.id == this.device.id);
-            callback(
-                null,
-                device.heating
-                    ? Characteristic.TargetHeatingCoolingState.HEAT
-                    : device.mode.indexOf("AUTO") == 0
-                        ? Characteristic.TargetHeatingCoolingState.AUTO
-                        : Characteristic.TargetHeatingCoolingState.OFF
-            );
-        });
-    }
-
-    setTargetHeatingCoolingState(value, callback) {
-        let mode;
-        switch (value) {
-            case Characteristic.TargetHeatingCoolingState.HEAT:
-                mode = "HIGH";
-                break;
-            case Characteristic.TargetHeatingCoolingState.AUTO:
-                mode = "AUTO";
-                break;
-            case Characteristic.TargetHeatingCoolingState.OFF:
-            default:
-                mode = "LOW";
-                break;
-        }
-        this.log(
-            `setTargetHeatingCoolingState: ${value} [${mode}] for ${this.device.name}`
+        callback(
+            null,
+            this.device.heating
+                ? Characteristic.CurrentHeatingCoolingState.HEAT
+                : Characteristic.CurrentHeatingCoolingState.OFF
         );
+    }
 
+
+    async getTargetHeatingCoolingState(callback) {
+        await this.isTokenValid();
+        this.device.heating = await this.salus.getDeviceHeating(this.token.value, this.device.id);
+        callback(
+            null,
+            this.device.heating
+                ? Characteristic.CurrentHeatingCoolingState.HEAT
+                : Characteristic.CurrentHeatingCoolingState.OFF
+        );
+    }
+
+
+    async getCurrentTemperature(callback) {
+        await this.isTokenValid();
+        this.device.current = await this.salus.getDeviceCurrentTemperature(this.token.value, this.device.id);
+        callback(null, parseFloat(this.device.current));
+    }
+
+    async getTargetTemperature(callback) {
+        await this.isTokenValid();
+        this.device.target = await this.salus.getDeviceTargetTemperature(this.token.value, this.device.id);
+        callback(null, parseFloat(this.device.target));
+    }
+
+    async setTargetTemperature(value, callback) {
+        await this.isTokenValid();
         this.salus
-            .setMode({
-                id: this.device.id,
-                mode: mode,
-            })
-            .then(() => {
-                callback();
-            });
-    }
-
-    getCurrentTemperature(callback) {
-        this.salus.devices().then((devices) => {
-            const device = devices.find((device) => device.id == this.device.id);
-            this.log(
-                `getCurrentTemperature for ${this.device.name}: ${device.current}`
-            );
-            callback(null, parseFloat(device.current));
-        });
-    }
-
-    getTargetTemperature(callback) {
-        this.salus.devices().then((devices) => {
-            const device = devices.find((device) => device.id == this.device.id);
-            this.log(
-                `getTargetTemperature for ${this.device.name}: ${device.target}`
-            );
-            callback(null, parseFloat(device.target));
-        });
-    }
-
-    setTargetTemperature(value, callback) {
-        this.log(`setTargetTemperature: ${value} for ${this.device.name}`);
-        this.salus
-            .setTarget({
-                id: this.device.id,
-                temperature: value,
-            })
+            .updateTemperature(this.token.value, this.device.id, value)
             .then(() => {
                 callback();
             });
     }
 
     getTemperatureDisplayUnits(callback) {
-        this.log(
-            `getTemperatureDisplayUnits for ${this.device.name}: ${Characteristic.TemperatureDisplayUnits.CELSIUS}`
-        );
-        // Always Celcius
         callback(null, Characteristic.TemperatureDisplayUnits.CELSIUS);
     }
 
-    /**
-     * Handle requests to set the "Temperature Display Units" characteristic
-     */
     setTemperatureDisplayUnits(value, callback) {
-        this.log(`setTemperatureDisplayUnits: ${value} for ${this.device.name}`);
-        // Always Celcius; NO-OP
         callback();
     }
 
     getActiveStatus(callback) {
         callback(null, this.device.mode != "OFFLINE");
+    }
+
+    async isTokenValid() {
+        if (this.token.creationDay !== new Date().getDate()) {
+            this.token = await this.salus.getToken();
+        }
     }
 }
 

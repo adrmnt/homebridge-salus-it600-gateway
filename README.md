@@ -4,7 +4,7 @@ Homebridge plugin for Salus iT600 thermostats.
  
 ## Installation
 
-Use the same credentials as in your Salus or JG Aura app.
+Use the same credentials as in your Salus
 
 ```
 {

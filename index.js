@@ -15,11 +15,10 @@ class SalusPlatform {
         this.accessories = new Map();
 
         api.on("didFinishLaunching", async () => {
-            const devices = await this.salus.devices();
-
+            const token = await this.salus.getToken();
+            const devices = await this.salus.getDevices(token.value);
             // Create new accessories
             devices.forEach((device) => {
-                this.log("Found [%s] %s", device.id, device.name);
                 let accessory = this.accessories.get(device.id);
                 if (accessory === undefined) {
                     const platformAccessory = new Accessory(
@@ -32,23 +31,22 @@ class SalusPlatform {
                         this.log,
                         platformAccessory,
                         this.salus,
-                        device
+                        device,
+                        token
                     );
                     this.accessories.set(device.id, accessory);
                     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
                         platformAccessory,
                     ]);
                 } else {
-                    this.log(
-                        `Configuring cached thermostat [${device.id}] ${device.name}`
-                    );
                     this.accessories.set(
                         device.id,
                         new SalusThermostatAccessory(
                             this.log,
                             accessory,
                             this.salus,
-                            device
+                            device,
+                            token
                         )
                     );
                 }
