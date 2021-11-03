@@ -42,6 +42,10 @@ class SalusThermostatAccessory {
             .on("get", this.getCurrentHeatingCoolingState.bind(this));
 
         this.service
+            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+            .on("get", this.getCurrentRelativeHumidity.bind(this));
+
+        this.service
             .getCharacteristic(Characteristic.TargetHeatingCoolingState)
             .on("get", this.getTargetHeatingCoolingState.bind(this))
 
@@ -94,6 +98,12 @@ class SalusThermostatAccessory {
         await this.isTokenValid();
         this.device.current = await this.salus.getDeviceCurrentTemperature(this.token.value, this.device.id);
         callback(null, parseFloat(this.device.current));
+    }
+
+    async getCurrentRelativeHumidity(callback) {
+        await this.isTokenValid();
+        this.device.current = await this.salus.getDeviceCurrentRelativeHumidity(this.token.value, this.device.id);
+        callback(null, parseFloat(this.device.humidity));
     }
 
     async getTargetTemperature(callback) {
