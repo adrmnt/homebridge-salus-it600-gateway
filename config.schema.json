@@ -14,6 +14,11 @@
         "title": "Password",
         "type": "string",
         "required": true
+      },
+      "thermostatModel": {
+        "title": "Thermostat Model (eg. SQ610)",
+        "type": "string",
+        "required": true
       }
     }
   }

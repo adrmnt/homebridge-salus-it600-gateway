@@ -15,7 +15,6 @@ class SalusThermostatAccessory {
             .setCharacteristic(Characteristic.Manufacturer, "Salus")
             .setCharacteristic(Characteristic.Model, "iT-600")
             .setCharacteristic(Characteristic.SerialNumber, this.device.id);
-
         this.service = this.accessory.getService(Service.Thermostat);
 
         this.service.getCharacteristic(Characteristic.CurrentTemperature).setProps({

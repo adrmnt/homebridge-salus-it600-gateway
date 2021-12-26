@@ -17,7 +17,7 @@ class SalusPlatform {
         api.on("didFinishLaunching", async () => {
             const token = await this.salus.getToken();
             const devices = await this.salus.getDevices(token.value);
-            // Create new accessories
+
             devices.forEach((device) => {
                 let accessory = this.accessories.get(device.id);
                 if (accessory === undefined) {
@@ -51,6 +51,7 @@ class SalusPlatform {
                     );
                 }
             });
+
         });
     }
 
