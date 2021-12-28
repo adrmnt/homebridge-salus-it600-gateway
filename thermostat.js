@@ -10,73 +10,66 @@ class SalusThermostatAccessory {
         this.salus = salus;
         this.token = token;
 
-        this.timePolling = 600000; // 10 minutes
-        this.statusPolling();
-
-        this.timeOut = null;
+        this.updateThermostats();
     }
 
-    statusPolling(){
-        this.timeOut = setTimeout(function refreshStatus(){
-            console.log("Thermostat " + this.device.id + " status refreshed.")
-            this.information = this.accessory.getService(Service.AccessoryInformation);
-            this.information
-                .setCharacteristic(Characteristic.Manufacturer, "Salus")
-                .setCharacteristic(Characteristic.Model, "iT-600")
-                .setCharacteristic(Characteristic.SerialNumber, this.device.id);
-            this.service = this.accessory.getService(Service.Thermostat);
+    updateThermostats(){
+        this.information = this.accessory.getService(Service.AccessoryInformation);
+        this.information
+            .setCharacteristic(Characteristic.Manufacturer, "Salus")
+            .setCharacteristic(Characteristic.Model, "iT-600")
+            .setCharacteristic(Characteristic.SerialNumber, this.device.id);
+        this.service = this.accessory.getService(Service.Thermostat);
 
-            this.service.getCharacteristic(Characteristic.CurrentTemperature).setProps({
-                minStep: 0.1,
+        this.service.getCharacteristic(Characteristic.CurrentTemperature).setProps({
+            minStep: 0.1,
+        });
+
+        this.service.getCharacteristic(Characteristic.TargetTemperature).setProps({
+            minStep: 0.5,
+            minValue: 10,
+            maxValue: 30,
+        });
+
+        this.service
+            .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+            .setProps({
+                validValues: [
+                    Characteristic.TargetHeatingCoolingState.OFF,
+                    Characteristic.TargetHeatingCoolingState.HEAT
+                ],
             });
 
-            this.service.getCharacteristic(Characteristic.TargetTemperature).setProps({
-                minStep: 0.5,
-                minValue: 10,
-                maxValue: 30,
-            });
+        this.service
+            .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+            .on("get", this.getCurrentHeatingCoolingState.bind(this));
 
-            this.service
-                .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                .setProps({
-                    validValues: [
-                        Characteristic.TargetHeatingCoolingState.OFF,
-                        Characteristic.TargetHeatingCoolingState.HEAT
-                    ],
-                });
+        this.service
+            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+            .on("get", this.getCurrentRelativeHumidity.bind(this));
 
-            this.service
-                .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-                .on("get", this.getCurrentHeatingCoolingState.bind(this));
+        this.service
+            .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+            .on("get", this.getTargetHeatingCoolingState.bind(this))
 
-            this.service
-                .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-                .on("get", this.getCurrentRelativeHumidity.bind(this));
+        this.service
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .on("get", this.getCurrentTemperature.bind(this));
 
-            this.service
-                .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-                .on("get", this.getTargetHeatingCoolingState.bind(this))
+        this.service
+            .getCharacteristic(Characteristic.TargetTemperature)
+            .on("get", this.getTargetTemperature.bind(this))
+            .on("set", this.setTargetTemperature.bind(this));
 
-            this.service
-                .getCharacteristic(Characteristic.CurrentTemperature)
-                .on("get", this.getCurrentTemperature.bind(this));
+        this.service
+            .getCharacteristic(Characteristic.TemperatureDisplayUnits)
+            .on("get", this.getTemperatureDisplayUnits.bind(this))
+            .on("set", this.setTemperatureDisplayUnits.bind(this));
 
-            this.service
-                .getCharacteristic(Characteristic.TargetTemperature)
-                .on("get", this.getTargetTemperature.bind(this))
-                .on("set", this.setTargetTemperature.bind(this));
-
-            this.service
-                .getCharacteristic(Characteristic.TemperatureDisplayUnits)
-                .on("get", this.getTemperatureDisplayUnits.bind(this))
-                .on("set", this.setTemperatureDisplayUnits.bind(this));
-
-            this.service.addOptionalCharacteristic(Characteristic.StatusActive);
-            this.service
-                .getCharacteristic(Characteristic.StatusActive)
-                .on("get", this.getActiveStatus.bind(this));
-            this.statusPolling();
-        }.bind(this),this.timePolling)
+        this.service.addOptionalCharacteristic(Characteristic.StatusActive);
+        this.service
+            .getCharacteristic(Characteristic.StatusActive)
+            .on("get", this.getActiveStatus.bind(this));
     }
 
     async getCurrentHeatingCoolingState(callback) {
