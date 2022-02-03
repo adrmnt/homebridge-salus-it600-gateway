@@ -1,6 +1,6 @@
 {
   "name": "homebridge-salus-it600-gateway",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "description": "Homebridge plugin for Salus iT600 thermostats.",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   "author": "Adrian Manta",
   "license": "ISC",
   "dependencies": {
-    "salus-it600-pack": "^1.1.4"
+    "salus-it600-pack": "^1.1.5"
   },
   "repository": {
     "type": "git",

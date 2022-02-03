@@ -132,7 +132,7 @@ class SalusThermostatAccessory {
     }
 
     getActiveStatus(callback) {
-        callback(null, this.device.mode != "OFFLINE");
+        callback(null, this.device.mode !== "OFFLINE");
     }
 
     async isTokenValid() {
