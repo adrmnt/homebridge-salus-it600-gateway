@@ -15,9 +15,13 @@
         "type": "string",
         "required": true
       },
-      "thermostatModel": {
+      "thermostatModels": {
         "title": "Thermostat Model (eg. SQ610)",
-        "type": "string",
+        "type": "array",
+        "items": {
+          "title": "Model",
+          "type": "string"
+        },
         "required": true
       }
     }
