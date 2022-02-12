@@ -27,7 +27,7 @@ class SalusThermostatAccessory {
 
         this.service.getCharacteristic(Characteristic.TargetTemperature).setProps({
             minStep: 0.5,
-            minValue: 10,
+            minValue: 5,
             maxValue: 30,
         });
 
@@ -51,6 +51,7 @@ class SalusThermostatAccessory {
         this.service
             .getCharacteristic(Characteristic.TargetHeatingCoolingState)
             .on("get", this.getTargetHeatingCoolingState.bind(this))
+            .on("set", this.setTargetHeatingCoolingState.bind(this));
 
         this.service
             .getCharacteristic(Characteristic.CurrentTemperature)
@@ -86,15 +87,41 @@ class SalusThermostatAccessory {
 
     async getTargetHeatingCoolingState(callback) {
         await this.isTokenValid();
-        this.device.heating = await this.salus.getDeviceHeating(this.token.value, this.device.id);
+
+        var state = await this.salus.getDeviceState(this.token.value, this.device.id);
+        switch (state) {
+            case 7: 
+                    this.device.state = Characteristic.TargetHeatingCoolingState.OFF;
+                    break;
+            case 2: 
+                    this.device.state = Characteristic.TargetHeatingCoolingState.HEAT;
+                    break;
+        }
+
         callback(
             null,
-            this.device.heating
-                ? Characteristic.CurrentHeatingCoolingState.HEAT
-                : Characteristic.CurrentHeatingCoolingState.OFF
+            this.device.state
         );
     }
 
+    async setTargetHeatingCoolingState(value, callback) {
+        await this.isTokenValid();
+
+        var state = 2;
+        switch (value) {
+            case Characteristic.TargetHeatingCoolingState.OFF: 
+                    state = 7;
+                    break;
+            case Characteristic.TargetHeatingCoolingState.HEAT: 
+                    state = 2;
+                    break;
+        }
+        this.salus
+            .updateState(this.token.value, this.device.id, state)
+            .then(() => {
+                callback();
+            });
+    }
 
     async getCurrentTemperature(callback) {
         await this.isTokenValid();
@@ -104,7 +131,7 @@ class SalusThermostatAccessory {
 
     async getCurrentRelativeHumidity(callback) {
         await this.isTokenValid();
-        this.device.current = await this.salus.getDeviceCurrentRelativeHumidity(this.token.value, this.device.id);
+        this.device.humidity = await this.salus.getDeviceCurrentRelativeHumidity(this.token.value, this.device.id);
         callback(null, parseFloat(this.device.humidity));
     }
 
@@ -132,7 +159,7 @@ class SalusThermostatAccessory {
     }
 
     getActiveStatus(callback) {
-        callback(null, this.device.mode !== "OFFLINE");
+        callback(null, this.device.mode != "OFFLINE");
     }
 
     async isTokenValid() {
