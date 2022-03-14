@@ -12,7 +12,11 @@ Use the same credentials as in your Salus
     {
       "platform": "Salus-iT600",
       "username": "email@example.com",
-      "password": "secret123"
+      "password": "secret123",
+      "thermostatModels": [
+        "exampleModel1",
+        "exampleModel2"
+      ]
     }
   ]
 }
